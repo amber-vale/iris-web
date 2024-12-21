@@ -45,16 +45,16 @@ from app.models.authorization import CaseAccessLevel
 
 
 # Create blueprint & import child blueprints
-api_v2_case_blueprint = Blueprint('cases',
-                                  __name__,
-                                  url_prefix='/cases')
-api_v2_case_blueprint.register_blueprint(case_assets_bp)
-api_v2_case_blueprint.register_blueprint(case_iocs_bp)
-api_v2_case_blueprint.register_blueprint(case_tasks_bp)
+cases_bp = Blueprint('cases',
+                     __name__,
+                     url_prefix='/cases')
+cases_bp.register_blueprint(case_assets_bp)
+cases_bp.register_blueprint(case_iocs_bp)
+cases_bp.register_blueprint(case_tasks_bp)
 
 
 # Routes
-@api_v2_case_blueprint.post('', strict_slashes=False)
+@cases_bp.post('', strict_slashes=False)
 @ac_api_requires(Permissions.standard_user)
 def create_case():
     """
@@ -68,7 +68,7 @@ def create_case():
         return response_api_error(e.get_message(), e.get_data())
 
 
-@api_v2_case_blueprint.get('', strict_slashes=False)
+@cases_bp.get('', strict_slashes=False)
 @ac_api_requires()
 def get_cases() -> Response:
     """
@@ -133,13 +133,14 @@ def get_cases() -> Response:
     return response_api_success(data=cases)
 
 
-@api_v2_case_blueprint.get('/<int:identifier>')
+@cases_bp.get('/<int:identifier>')
 @ac_api_requires()
 def case_routes_get(identifier):
     """
     Get a case by its ID
     """
 
+    print(identifier, type(identifier))
     case = get_case(identifier)
     if not case:
         return response_api_not_found()
@@ -148,7 +149,7 @@ def case_routes_get(identifier):
     return response_api_success(CaseSchemaForAPIV2().dump(case))
 
 
-@api_v2_case_blueprint.delete('/<int:identifier>')
+@cases_bp.delete('/<int:identifier>')
 @ac_api_requires(Permissions.standard_user)
 def case_routes_delete(identifier):
     """
