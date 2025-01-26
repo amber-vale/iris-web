@@ -51,7 +51,7 @@ def get_case(caseid) -> Cases:
     return Cases.query.filter(Cases.case_id == caseid).first()
 
 
-def case_exists(caseid):
+def case_db_exists(caseid):
     return Cases.query.filter(Cases.case_id == caseid).count()
 
 
@@ -110,7 +110,7 @@ def get_case_report_template():
         Languages.name,
         CaseTemplateReport.description
     ).filter(and_(
-        Languages.id == CaseTemplateReport.report_type_id,
+        Languages.id == CaseTemplateReport.language_id,
         ReportType.name == "Investigation"
     )).join(
         CaseTemplateReport.report_type

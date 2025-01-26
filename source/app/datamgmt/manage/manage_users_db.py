@@ -31,7 +31,7 @@ from app.iris_engine.access_control.utils import ac_auto_update_user_effective_a
 from app.iris_engine.access_control.utils import ac_get_detailed_effective_permissions_from_groups
 from app.iris_engine.access_control.utils import ac_remove_case_access_from_user
 from app.iris_engine.access_control.utils import ac_set_case_access_for_user
-from app.models import Cases, Client
+from app.models import Cases, Client, UserActivity
 from app.models.authorization import CaseAccessLevel, UserClient
 from app.models.authorization import Group
 from app.models.authorization import Organisation
@@ -128,6 +128,27 @@ def update_user_groups(user_id, groups):
 
     ac_auto_update_user_effective_access(user_id)
 
+def add_user_to_customer(user_id, customer_id):
+    user_client = UserClient.query.filter(
+        UserClient.user_id == user_id,
+        UserClient.client_id == customer_id
+    ).first()
+
+    if user_client:
+        return True
+
+    user_client = UserClient()
+    user_client.user_id = user_id
+    user_client.client_id = customer_id
+    user_client.access_level = CaseAccessLevel.full_access.value
+    user_client.allow_alerts = True
+    db.session.add(user_client)
+    db.session.commit()
+
+    ac_auto_update_user_effective_access(user_id)
+
+    return True
+
 
 def update_user_customers(user_id, customers):
     # Update the user's customers directly
@@ -202,7 +223,7 @@ def update_user_orgs(user_id, orgs):
     db.session.commit()
 
     ac_auto_update_user_effective_access(user_id)
-    return True, f'Organisations membership updated' if updated else "Nothing changed"
+    return True, 'Organisations membership updated' if updated else "Nothing changed"
 
 
 def change_user_primary_org(user_id, old_org_id, new_org_id):
@@ -678,6 +699,10 @@ def update_user(user: User, name: str = None, email: str = None, password: str =
 
 
 def delete_user(user_id):
+    # Migrate the user activity to a shadow user
+
+    UserActivity.query.filter(UserActivity.user_id == user_id).update({UserActivity.user_id: None})
+
     UserCaseAccess.query.filter(UserCaseAccess.user_id == user_id).delete()
     UserOrganisation.query.filter(UserOrganisation.user_id == user_id).delete()
     UserGroup.query.filter(UserGroup.user_id == user_id).delete()

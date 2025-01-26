@@ -27,7 +27,6 @@ from sqlalchemy import func
 
 from app import app
 from app import db
-from app.datamgmt.case.case_iocs_db import add_ioc_link
 from app.models import CaseReceivedFile
 from app.models import DataStoreFile
 from app.models import DataStorePath
@@ -53,6 +52,7 @@ def datastore_get_root(cid):
         ).first()
 
     return dsp_root
+
 
 def ds_list_tree(cid):
     dsp_root = datastore_get_root(cid)
@@ -180,7 +180,7 @@ def datastore_add_child_node(parent_node, folder_name, cid):
             DataStorePath.path_case_id == cid
         ).first()
 
-    except Exception as e:
+    except Exception:
         return True, f'Unable to request datastore for parent node : {parent_node}', None
 
     if dsp_base is None:
@@ -206,7 +206,7 @@ def datastore_rename_node(parent_node, folder_name, cid):
             DataStorePath.path_case_id == cid
         ).first()
 
-    except Exception as e:
+    except Exception:
         return True, f'Unable to request datastore for parent node : {parent_node}', None
 
     if dsp_base is None:
@@ -226,7 +226,7 @@ def datastore_delete_node(node_id, cid):
             DataStorePath.path_case_id == cid
         ).first()
 
-    except Exception as e:
+    except Exception:
         return True, f'Unable to request datastore for parent node : {node_id}'
 
     if dsp_base is None:
@@ -371,10 +371,6 @@ def datastore_add_file_as_ioc(dsf, caseid):
 
         db.session.add(ioc)
         db.session.commit()
-
-    add_ioc_link(ioc.ioc_id, caseid)
-
-    return
 
 
 def datastore_add_file_as_evidence(dsf, caseid):
